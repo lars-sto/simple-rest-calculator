@@ -1,0 +1,43 @@
+# Go build artifacts
+/bin/
+/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test binaries
+*.test
+*.out
+
+# Coverage / profiling
+coverage.out
+cpu.prof
+mem.prof
+
+# Local environment / editor
+.env
+.env.*
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+/tmp/
+
+# Runtime data (ignored)
+data/*
+recent.jsonl
+
+# Example files (tracked)
+!data/*.example.jsonl
