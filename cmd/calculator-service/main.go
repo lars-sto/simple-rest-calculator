@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"calculator-service/internal/httpapi"
@@ -16,8 +19,7 @@ import (
 func main() {
 	addr := flag.String("addr", ":8080", "listen address")
 	persist := flag.Bool("persist", false, "persist recent results to disk (jsonl)")
-	dataPath := flag.String("data-path", "./data/recent.jsonl",
-		"path to the jsonl file used for persistence")
+	dataPath := flag.String("data-path", "./data/recent.jsonl", "path to the jsonl file used for persistence")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds)
@@ -51,16 +53,40 @@ func main() {
 		Addr:              *addr,
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
-	defer func() {
-		for _, c := range closers {
-			_ = c()
+	// Signal handling
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	errCh := make(chan error, 1)
+	go func() {
+		logger.Printf("listening on %s", *addr)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- err
 		}
+		close(errCh)
 	}()
 
-	logger.Printf("listening on %s", *addr)
-	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logger.Fatalf("server error: %v", err)
+	select {
+	case <-ctx.Done():
+		logger.Printf("shutdown signal received")
+	case err := <-errCh:
+		if err != nil {
+			logger.Fatalf("server error: %v", err)
+		}
 	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_ = srv.Shutdown(shutdownCtx)
+
+	for _, c := range closers {
+		_ = c()
+	}
+	logger.Printf("shutdown complete")
 }
