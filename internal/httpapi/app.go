@@ -6,6 +6,8 @@ import (
 
 	"calculator-service/internal/service"
 	"calculator-service/internal/store"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type App struct {
@@ -15,6 +17,9 @@ type App struct {
 }
 
 func (a *App) RegisterRoutes(mux *http.ServeMux) {
+	// Metrics: GET
+	mux.Handle("/metrics", promhttp.Handler())
+
 	// Math: POST
 	mux.HandleFunc("/add", a.wrapMath("add", a.handleAdd))
 	mux.HandleFunc("/subtract", a.wrapMath("subtract", a.handleSub))

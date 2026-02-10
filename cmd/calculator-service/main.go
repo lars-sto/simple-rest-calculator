@@ -14,6 +14,8 @@ import (
 	"calculator-service/internal/httpapi"
 	"calculator-service/internal/service"
 	"calculator-service/internal/store"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -48,6 +50,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	app.RegisterRoutes(mux)
+	httpapi.RegisterMetrics(prometheus.DefaultRegisterer)
 
 	srv := &http.Server{
 		Addr:              *addr,
