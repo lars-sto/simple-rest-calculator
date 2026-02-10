@@ -80,3 +80,17 @@ func (serviceStub) Add(ctx context.Context, a, b float64) (float64, error) { ret
 func (serviceStub) Sub(ctx context.Context, a, b float64) (float64, error) { return -1, nil }
 func (serviceStub) Mul(ctx context.Context, a, b float64) (float64, error) { return 2, nil }
 func (serviceStub) Div(ctx context.Context, a, b float64) (float64, error) { return 0.5, nil }
+
+func TestRegisterRoutes_Healthz(t *testing.T) {
+	app := &App{Store: store.NewMemoryStore(10)}
+	mux := http.NewServeMux()
+	app.RegisterRoutes(mux)
+
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+}
