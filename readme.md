@@ -8,7 +8,16 @@ recent calculations. The calculator operates on finite floating-point numbers wi
 ## How to Run
 
 ```bash
-go run ./cmd/calculator-service --addr :9090
+  go run ./cmd/calculator-service --addr :9090
+```
+
+### Kubernetes
+```bash
+  docker build -t calculator-service:latest .
+  kind load docker-image calculator-service:latest --name calc
+  kubectl apply -k deploy/k8s/base
+  kubectl get pods -o wide
+  kubectl port-forward svc/calculator-service 9090:80
 ```
 
 ## Persistence
@@ -18,7 +27,7 @@ By default, the recent calculation history is stored in memory only and is lost 
 You can enable persistence using a JSONL (JSON Lines) append-only log:
 
 ```bash
-go run ./cmd/calculator-service --addr :9090 --persist --data-path ./data/recent.jsonl
+  go run ./cmd/calculator-service --addr :9090 --persist --data-path ./data/recent.jsonl
 ```
 
 ### Compaction
@@ -36,35 +45,40 @@ This prevents the JSONL log from growing indefinitely and keeps restarts fast.
 
 ### Add numbers
 ```bash
-curl -X POST http://localhost:9090/add \
-  -H "Content-Type: application/json" \
-  -d '{"a":1,"b":2}'
+  curl -X POST http://localhost:9090/add \
+    -H "Content-Type: application/json" \
+    -d '{"a":1,"b":2}'
 ```
 
 ### Subtract numbers
 ```bash
-curl -X POST http://localhost:9090/subtract \
--H "Content-Type: application/json" \
--d '{"a":5,"b":3}'
+  curl -X POST http://localhost:9090/subtract \
+    -H "Content-Type: application/json" \
+    -d '{"a":5,"b":3}'
 ```
 
 ### Multiply numbers
 ```bash
-curl -X POST http://localhost:9090/multiply \
-  -H "Content-Type: application/json" \
-  -d '{"a":4,"b":6}'
+  curl -X POST http://localhost:9090/multiply \
+    -H "Content-Type: application/json" \
+    -d '{"a":4,"b":6}'
 ```
 
 ### Divide numbers
 ```bash
-curl -X POST http://localhost:9090/divide \
-  -H "Content-Type: application/json" \
-  -d '{"a":10,"b":2}'
+  curl -X POST http://localhost:9090/divide \
+    -H "Content-Type: application/json" \
+    -d '{"a":10,"b":2}'
 ```
 
 ### Recent calculations
 ```bash
-curl http://localhost:9090/recent?n=5
+  curl http://localhost:9090/recent?n=5
+```
+
+## Metrics
+```bash
+  curl http://localhost:9090/metrics
 ```
 
 ## Components
