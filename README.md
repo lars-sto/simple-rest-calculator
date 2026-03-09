@@ -11,13 +11,39 @@ recent calculations. The calculator operates on finite floating-point numbers wi
   go run ./cmd/calculator-service --addr :9090
 ```
 
-### Kubernetes
 ```bash
-  docker build -t calculator-service:latest .
-  kind load docker-image calculator-service:latest --name calc
-  kubectl apply -k deploy/k8s/base
-  kubectl get pods -o wide
-  kubectl port-forward svc/calculator-service 9090:80
+  go test ./...
+```
+
+## Docker
+Build the image:
+
+```bash
+  docker build -t calculator-service:dev .
+```
+
+Run the container:
+
+```bash
+  docker run --rm -p 9090:8080 calculator-service:dev
+```
+
+Run the container with persistence disabled explicitly:
+
+```bash
+  docker run --rm -p 9090:8080 calculator-service:dev -addr=:8080 -persist=false
+```
+
+Run the container with persistence enabled:
+
+```bash
+  docker run --rm \
+    -p 9090:8080 \
+    -v "$(pwd)/data:/data" \
+    calculator-service:dev \
+    -addr=:8080 \
+    -persist=true \
+    -data-path=/data/recent.jsonl
 ```
 
 ## Persistence
