@@ -1,10 +1,6 @@
 package httpapi
 
 import (
-	"net/http"
-	"strconv"
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -37,23 +33,4 @@ var (
 
 func RegisterMetrics(reg prometheus.Registerer) {
 	reg.MustRegister(httpRequestsTotal, httpRequestDurationSeconds, httpRequestsInFlight)
-}
-
-func (a *App) withMetrics(pathLabel string, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		httpRequestsInFlight.WithLabelValues(pathLabel).Inc()
-		start := time.Now()
-
-		rec := newResponseRecorder(w)
-		next(rec, r)
-
-		status := rec.status
-		if status == 0 {
-			status = http.StatusOK
-		}
-
-		httpRequestsTotal.WithLabelValues(r.Method, pathLabel, strconv.Itoa(status)).Inc()
-		httpRequestDurationSeconds.WithLabelValues(r.Method, pathLabel).Observe(time.Since(start).Seconds())
-		httpRequestsInFlight.WithLabelValues(pathLabel).Dec()
-	}
 }

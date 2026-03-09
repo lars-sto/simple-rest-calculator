@@ -47,7 +47,9 @@ func TestMetricsEndpoint_Served(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET /metrics failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("expected 200, got %d", resp.StatusCode)
@@ -91,7 +93,9 @@ func TestMetricsEndpoint_ContainsCustomMetrics(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GET /metrics failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	b, _ := io.ReadAll(resp.Body)
 	txt := string(b)

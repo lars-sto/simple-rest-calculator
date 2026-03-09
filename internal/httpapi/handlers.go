@@ -44,7 +44,9 @@ func (a *App) handleTwoNumberOp(
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	defer r.Body.Close()
+	defer func() {
+		_ = r.Body.Close()
+	}()
 
 	var req twoNumberRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
