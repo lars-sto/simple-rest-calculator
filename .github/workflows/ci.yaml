@@ -27,6 +27,8 @@ jobs:
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.11.2
 
       - name: Run tests
         run: go test ./...
@@ -53,3 +55,43 @@ jobs:
           IMAGE=ghcr.io/${{ github.repository_owner }}/calculator-service
           docker push $IMAGE:latest
           docker push $IMAGE:${{ github.sha }}
+
+      - name: Checkout homelab repository
+        if: github.ref == 'refs/heads/main'
+        uses: actions/checkout@v4
+        with:
+          repository: lars-sto/homelab
+          token: ${{ secrets.HOMELAB_REPO_TOKEN }}
+          path: homelab
+
+      - name: Update calculator image tag in homelab repo
+        if: github.ref == 'refs/heads/main'
+        id: update_homelab
+        run: |
+          FILE="homelab/gitops/manifests/services/calculator/kustomization.yaml"
+          NEW_TAG="${{ github.sha }}"
+
+          sed -i "s/newTag: .*/newTag: ${NEW_TAG}/" "$FILE"
+
+          if git -C homelab diff --quiet -- "$FILE"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request in homelab repo
+        if: github.ref == 'refs/heads/main' && steps.update_homelab.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.HOMELAB_REPO_TOKEN }}
+          path: homelab
+          branch: chore/update-calculator-image-${{ github.sha }}
+          commit-message: "chore(calculator): update image tag to ${{ github.sha }}"
+          title: "chore(calculator): update image tag to ${{ github.sha }}"
+          body: |
+            Automated update from calculator-service CI.
+
+            - Service repo commit: `${{ github.sha }}`
+            - Updated file: `gitops/manifests/services/calculator/kustomization.yaml`
+          delete-branch: true
+          base: main
