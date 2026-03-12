@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -17,6 +18,8 @@ type App struct {
 }
 
 func (a *App) RegisterRoutes(mux *http.ServeMux) {
+	fmt.Println("Init Routes")
+
 	// Metrics: GET
 	mux.Handle("/metrics", promhttp.Handler())
 
