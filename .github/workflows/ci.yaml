@@ -64,21 +64,6 @@ jobs:
           token: ${{ secrets.HOMELAB_REPO_TOKEN }}
           path: homelab
 
-      - name: Update calculator image tag in homelab repo
-        if: github.ref == 'refs/heads/main'
-        id: update_homelab
-        run: |
-          FILE="homelab/gitops/manifests/services/calculator/kustomization.yaml"
-          NEW_TAG="${{ github.sha }}"
-
-          sed -i "s/newTag: .*/newTag: ${NEW_TAG}/" "$FILE"
-
-          if git -C homelab diff --quiet -- "$FILE"; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Create pull request in homelab repo
         if: github.ref == 'refs/heads/main' && steps.update_homelab.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
