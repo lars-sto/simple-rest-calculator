@@ -68,17 +68,18 @@ jobs:
         if: github.ref == 'refs/heads/main'
         id: update_homelab
         run: |
-          FILE="homelab/gitops/manifests/services/calculator/kustomization.yaml"
+          FILE="gitops/manifests/services/calculator/kustomization.yaml"
+          FULL_PATH="homelab/${FILE}"
           NEW_TAG="${{ github.sha }}"
-          
+
           echo "Before:"
-          grep "newTag:" "$FILE" || true
-          
-          sed -i "s/newTag: .*/newTag: ${NEW_TAG}/" "$FILE"
-          
+          grep "newTag:" "$FULL_PATH" || true
+
+          sed -i "s/newTag: .*/newTag: ${NEW_TAG}/" "$FULL_PATH"
+
           echo "After:"
-          grep "newTag:" "$FILE" || true
-          
+          grep "newTag:" "$FULL_PATH" || true
+
           if git -C homelab diff --quiet -- "$FILE"; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No change detected"
